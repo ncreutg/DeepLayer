@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Deep Layer</string>
+    <string name="tab_home">Home</string>
+    <string name="tab_settings">Settings</string>
+    <string name="status_title">STATUS</string>
+    <string name="status_ready">Ready for customization</string>
+    <string name="status_bg_import">Importing background layer...</string>
+    <string name="status_fg_import">Importing foreground layer...</string>
+    <string name="status_bg_success">Background layer saved successfully</string>
+    <string name="status_fg_success">Foreground layer saved successfully</string>
+    <string name="status_root_error">Root access error during file copy</string>
+    <string name="layer_background">Background</string>
+    <string name="layer_bg_sub">Moving background layer</string>
+    <string name="layer_foreground">Foreground</string>
+    <string name="layer_fg_sub">Overlay asset object (PNG)</string>
+    <string name="btn_apply">Apply Layers</string>
+    <string name="preview_header">LIVE 3D PREVIEW</string>
+    <string name="preview_empty_bg">No background selected</string>
+    <string name="slider_sensitivity">Background Sensitivity</string>
+    <string name="slider_offset_y">Foreground Vertical Offset (Y)</string>
+    <string name="slider_offset_x">Foreground Horizontal Offset (X)</string>
+    <string name="unit_px">px</string>
+    <string name="btn_zygote">Soft Reboot (Zygote)</string>
+    <string name="dialog_title">Preferences</string>
+    <string name="dialog_lang_header">App Language</string>
+    <string name="dialog_theme_header">Icon Theme Palette</string>
+    <string name="theme_custom">Custom Palette</string>
+    <string name="theme_monet">Monet (Dynamic)</string>
+    <string name="dialog_btn_save">Save</string>
+    <string name="dialog_btn_cancel">Cancel</string>
+    <string name="mode_photo">Photo Mode</string>
+    <string name="mode_emoji">Emoji Mode</string>
+    <string name="emoji_input_label">Enter Emojis or Stickers</string>
+    <string name="emoji_bg_label">Background Color (RGB)</string>
+    <string name="tab_emoji">Emoji &amp; Stickers</string>
+    <string name="layer_sticker">Sticker Asset</string>
+    <string name="emoji_use_sticker">Use Graphic Sticker instead of Text</string>
+</resources>

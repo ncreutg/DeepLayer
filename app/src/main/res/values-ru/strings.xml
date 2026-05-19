@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Deep Layer</string>
+    <string name="tab_home">Главная</string>
+    <string name="tab_settings">Настройки</string>
+    <string name="status_title">СОСТОЯНИЕ</string>
+    <string name="status_ready">Готов к кастомизации</string>
+    <string name="status_bg_import">Импорт заднего плана...</string>
+    <string name="status_fg_import">Импорт переднего плана...</string>
+    <string name="status_bg_success">Задний план успешно сохранен</string>
+    <string name="status_fg_success">Передний план успешно сохранен</string>
+    <string name="status_root_error">Ошибка Root при копировании</string>
+    <string name="layer_background">Задний план</string>
+    <string name="layer_bg_sub">Движущийся фон</string>
+    <string name="layer_foreground">Передний план</string>
+    <string name="layer_fg_sub">Объект поверх фона (PNG)</string>
+    <string name="btn_apply">Применить слои</string>
+    <string name="preview_header">ИНТЕРАКТИВНЫЙ 3D ПРЕДПРОСМОТР</string>
+    <string name="preview_empty_bg">Фон не выбран</string>
+    <string name="slider_sensitivity">Чувствительность фона</string>
+    <string name="slider_offset_y">Положение по вертикали (Y)</string>
+    <string name="slider_offset_x">Положение по горизонтали (X)</string>
+    <string name="unit_px">px</string>
+    <string name="btn_zygote">Перезапустить Zygote</string>
+    <string name="dialog_title">Преференции</string>
+    <string name="dialog_lang_header">Язык приложения</string>
+    <string name="dialog_theme_header">Палитра иконки</string>
+    <string name="theme_custom">Наш стиль</string>
+    <string name="theme_monet">Monet (Динамическая)</string>
+    <string name="dialog_btn_save">Сохранить</string>
+    <string name="dialog_btn_cancel">Отмена</string>
+    <string name="mode_photo">Режим Фото</string>
+    <string name="mode_emoji">Режим Эмодзи</string>
+    <string name="emoji_input_label">Введите Эмодзи или Стикер</string>
+    <string name="emoji_bg_label">Цвет фона (RGB)</string>
+    <string name="tab_emoji">Эмодзи и Стикеры</string>
+    <string name="layer_sticker">Файл стикера</string>
+    <string name="emoji_use_sticker">Использовать графический стикер вместо текста</string>
+
+</resources>

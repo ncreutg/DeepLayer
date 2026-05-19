@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="io.ncreutg.deeplayer">
+
+    <uses-permission android:name="android.permission.INTERNET" />
+
+    <application
+        android:allowBackup="true"
+        android:icon="@mipmap/ic_launcher_monet"
+        android:label="DeepLayer"
+        android:supportsRtl="true"
+        android:theme="@style/Theme.DeepLayer">
+
+        <activity
+            android:name=".MainActivity"
+            android:exported="true" />
+
+        <!-- 1. ЯРЛЫК ДЛЯ MONET ИКОНКИ (Теперь он включен по умолчанию!) -->
+        <activity-alias
+            android:name=".MainActivityMonet"
+            android:enabled="true"
+            android:exported="true"
+            android:icon="@mipmap/ic_launcher_monet"
+            android:label="DeepLayer"
+            android:targetActivity=".MainActivity">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity-alias>
+
+        <!-- 2. ЯРЛЫК ДЛЯ ОБЫЧНОЙ ИКОНКИ (Теперь он выключен по умолчанию) -->
+        <activity-alias
+        android:name=".MainActivityCustom"
+        android:enabled="false"
+        android:exported="true"
+        android:icon="@mipmap/ic_launcher"
+        android:label="DeepLayer"
+        android:targetActivity=".MainActivity">
+        <intent-filter>
+            <action android:name="android.intent.action.MAIN" />
+            <category android:name="android.intent.category.LAUNCHER" />
+        </intent-filter>
+        </activity-alias>
+
+        <meta-data android:name="xposedmodule" android:value="true" />
+        <meta-data android:name="xposeddescription" android:value="DeepLayer: System-level depth effect" />
+        <meta-data android:name="xposedminversion" android:value="93" />
+        <meta-data android:name="xposedscope" android:resource="@array/xposed_scope" />
+
+    </application>
+</manifest>
