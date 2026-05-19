@@ -18,6 +18,7 @@
 package io.ncreutg.deeplayer.ui
 
 import android.net.Uri
+import androidx.compose.foundation.background
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.AnimatedVisibility
@@ -26,9 +27,11 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -40,7 +43,6 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import io.ncreutg.deeplayer.R
-import io.ncreutg.deeplayer.utils.LayerPickerCard
 import io.ncreutg.deeplayer.utils.saveLayer
 import io.ncreutg.deeplayer.utils.saveValueConfig
 import io.ncreutg.deeplayer.utils.uriToBitmap
@@ -69,8 +71,9 @@ fun MainScreen(
 
     var status by remember { mutableStateOf(statusReady) }
     var isProcessing by remember { mutableStateOf(false) }
-
     var isPhotoModeActive by remember { mutableStateOf(true) }
+
+    var showFullscreenPreview by remember { mutableStateOf(false) }
 
     LaunchedEffect(Unit) {
         withContext(Dispatchers.IO) {
@@ -81,131 +84,231 @@ fun MainScreen(
         }
     }
 
-    val bgLauncher = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri ->
-        uri?.let {
-            onBgSelected(it)
-            isProcessing = true
-            status = context.getString(R.string.status_bg_import)
-            scope.launch {
-                val bitmap = uriToBitmap(context, uri)
-                val saved = saveLayer(context, bitmap, "background.png")
-                status = if (saved) statusBgSuccess else statusRootError
-                isProcessing = false
-            }
-        }
-    }
-
-    val fgLauncher = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri ->
-        uri?.let {
-            onFgSelected(it)
-            isProcessing = true
-            status = context.getString(R.string.status_fg_import)
-            scope.launch {
-                val bitmap = uriToBitmap(context, uri)
-                val saved = saveLayer(context, bitmap, "foreground.png")
-                status = if (saved) statusPageSuccess else statusRootError
-                isProcessing = false
-            }
-        }
-    }
-
-    Column(
-        modifier = Modifier.fillMaxSize().padding(horizontal = 20.dp, vertical = 10.dp),
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        LargeTopAppBar(
-            title = { Text(stringResource(R.string.app_name), fontWeight = FontWeight.Black, color = MaterialTheme.colorScheme.primary) },
-            actions = {
-                Box {
-                    IconButton(onClick = { menuExpanded = true }) {
-                        Icon(Icons.Default.MoreVert, contentDescription = "Menu Options")
-                    }
-                    DropdownMenu(expanded = menuExpanded, onDismissRequest = { menuExpanded = false }) {
-                        DropdownMenuItem(
-                            text = { Text(stringResource(R.string.dialog_title)) },
-                            onClick = {
-                                menuExpanded = false
-                                onMenuPreferencesClicked()
-                            }
-                        )
-                    }
-                }
-            },
-            colors = TopAppBarDefaults.largeTopAppBarColors(containerColor = Color.Transparent)
+    if (showFullscreenPreview) {
+        PhotoPreviewScreen(
+            bgUri = bgUri,
+            fgUri = fgUri,
+            onBackClicked = { showFullscreenPreview = false }
         )
-
-        Card(
-            modifier = Modifier.fillMaxWidth(),
-            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)),
-            shape = RoundedCornerShape(24.dp)
-        ) {
-            Column(modifier = Modifier.padding(20.dp)) {
-                Text(stringResource(R.string.status_title), style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
-                Spacer(modifier = Modifier.height(4.dp))
-                Text(status, style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.SemiBold)
-                AnimatedVisibility(visible = isProcessing, enter = fadeIn(tween(300)), exit = fadeOut(tween(300))) {
-                    Spacer(modifier = Modifier.height(16.dp))
-                    LinearProgressIndicator(modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(4.dp)))
+    } else {
+        val bgLauncher = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri ->
+            uri?.let {
+                onBgSelected(it)
+                isProcessing = true
+                status = context.getString(R.string.status_bg_import)
+                scope.launch {
+                    val bitmap = uriToBitmap(context, uri)
+                    val saved = saveLayer(context, bitmap, "background.png")
+                    status = if (saved) statusBgSuccess else statusRootError
+                    isProcessing = false
                 }
             }
         }
 
-        Spacer(modifier = Modifier.height(16.dp))
+        val fgLauncher = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri ->
+            uri?.let {
+                onFgSelected(it)
+                isProcessing = true
+                status = context.getString(R.string.status_fg_import)
+                scope.launch {
+                    val bitmap = uriToBitmap(context, uri)
+                    val saved = saveLayer(context, bitmap, "foreground.png")
+                    status = if (saved) statusPageSuccess else statusRootError
+                    isProcessing = false
+                }
+            }
+        }
 
-        Card(
-            modifier = Modifier.fillMaxWidth(),
-            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceColorAtElevation(2.dp)),
-            shape = RoundedCornerShape(24.dp)
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(horizontal = 20.dp, vertical = 10.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Row(
-                modifier = Modifier.fillMaxWidth().padding(20.dp),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text("Enable 3D Photo Parallax", fontWeight = FontWeight.Bold, style = MaterialTheme.typography.bodyMedium)
-                Switch(
-                    checked = isPhotoModeActive,
-                    onCheckedChange = { active ->
-                        isPhotoModeActive = active
-                        val targetMode = if (active) "photo" else "emoji"
-                        scope.launch(Dispatchers.IO) {
-                            saveValueConfig("config_mode.txt", targetMode, context)
+            LargeTopAppBar(
+                title = { Text(stringResource(R.string.app_name), fontWeight = FontWeight.Black, color = MaterialTheme.colorScheme.primary) },
+                actions = {
+                    Box {
+                        IconButton(onClick = { menuExpanded = true }) {
+                            Icon(Icons.Default.MoreVert, contentDescription = "Menu Options")
+                        }
+                        DropdownMenu(expanded = menuExpanded, onDismissRequest = { menuExpanded = false }) {
+                            DropdownMenuItem(
+                                text = { Text(stringResource(R.string.dialog_title)) },
+                                onClick = {
+                                    menuExpanded = false
+                                    onMenuPreferencesClicked()
+                                }
+                            )
                         }
                     }
+                },
+                colors = TopAppBarDefaults.largeTopAppBarColors(containerColor = Color.Transparent)
+            )
+
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)),
+                shape = RoundedCornerShape(24.dp)
+            ) {
+                Row(
+                    modifier = Modifier.fillMaxWidth().padding(20.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text(stringResource(R.string.status_title), style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
+                        Spacer(modifier = Modifier.height(4.dp))
+                        Text(status, style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.SemiBold)
+                    }
+
+                    IconButton(
+                        onClick = { showFullscreenPreview = true },
+                        colors = IconButtonDefaults.iconButtonColors(containerColor = MaterialTheme.colorScheme.primaryContainer)
+                    ) {
+                        Icon(Icons.Default.PlayArrow, contentDescription = "View Live Preview", tint = MaterialTheme.colorScheme.onPrimaryContainer)
+                    }
+                }
+                AnimatedVisibility(visible = isProcessing, enter = fadeIn(tween(300)), exit = fadeOut(tween(300))) {
+                    LinearProgressIndicator(modifier = Modifier.fillMaxWidth().padding(horizontal = 20.dp, vertical = 10.dp).clip(RoundedCornerShape(4.dp)))
+                }
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceColorAtElevation(2.dp)),
+                shape = RoundedCornerShape(24.dp)
+            ) {
+                Row(
+                    modifier = Modifier.fillMaxWidth().padding(20.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text("Enable 3D Photo Parallax", fontWeight = FontWeight.Bold, style = MaterialTheme.typography.bodyMedium)
+                    Switch(
+                        checked = isPhotoModeActive,
+                        onCheckedChange = { active ->
+                            isPhotoModeActive = active
+                            val targetMode = if (active) "photo" else "emoji"
+                            scope.launch(Dispatchers.IO) {
+                                saveValueConfig("config_mode.txt", targetMode, context)
+                            }
+                        }
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+                LayerPickerCard(modifier = Modifier.weight(1f), title = stringResource(R.string.layer_background), subtitle = stringResource(R.string.layer_bg_sub), imageUri = bgUri, enabled = !isProcessing && isPhotoModeActive, onClick = { bgLauncher.launch("image/*") })
+                LayerPickerCard(modifier = Modifier.weight(1f), title = stringResource(R.string.layer_foreground), subtitle = stringResource(R.string.layer_fg_sub), imageUri = fgUri, enabled = !isProcessing && isPhotoModeActive, onClick = { fgLauncher.launch("image/*") })
+            }
+
+            // FIX: Fill parameter is set to false. This allows the spacer to collapse completely
+            // if screen height constraints are tight, preventing the button below from crunching.
+            Spacer(modifier = Modifier.weight(1f, fill = false))
+            Spacer(modifier = Modifier.height(24.dp))
+
+            Button(
+                onClick = {
+                    scope.launch(Dispatchers.IO) {
+                        try {
+                            val process = Runtime.getRuntime().exec("su")
+                            process.outputStream.use { os ->
+                                // Sync baseline file access permissions for photo mode layers
+                                os.write("chmod 666 /data/local/tmp/background.png\n".toByteArray())
+                                os.write("chmod 666 /data/local/tmp/foreground.png\n".toByteArray())
+                                os.write("pkill -f com.android.systemui\n".toByteArray())
+                                os.flush()
+                            }
+                            process.waitFor()
+                        } catch (e: Exception) { e.printStackTrace() }
+                    }
+                },
+                // FIX: Added navigationBarsPadding to safely push the button above the system gesture bar without crunching it
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(58.dp)
+                    .navigationBarsPadding(),
+                shape = RoundedCornerShape(28.dp),
+                enabled = isPhotoModeActive
+            ) {
+                Icon(Icons.Default.CheckCircle, contentDescription = null)
+                Spacer(modifier = Modifier.width(8.dp))
+                Text(stringResource(R.string.btn_apply), fontWeight = FontWeight.Bold)
+            }
+            Spacer(modifier = Modifier.height(12.dp))
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun LayerPickerCard(
+    modifier: Modifier,
+    title: String,
+    subtitle: String,
+    imageUri: Uri?,
+    enabled: Boolean,
+    onClick: () -> Unit
+) {
+    Card(
+        modifier = modifier
+            .fillMaxWidth()
+            .height(180.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = if (enabled) MaterialTheme.colorScheme.surfaceColorAtElevation(2.dp) else MaterialTheme.colorScheme.surfaceColorAtElevation(2.dp).copy(alpha = 0.5f)
+        ),
+        shape = RoundedCornerShape(24.dp),
+        onClick = { if (enabled) onClick() }
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(16.dp),
+            verticalArrangement = Arrangement.SpaceBetween
+        ) {
+            Column {
+                Text(
+                    text = title,
+                    fontWeight = FontWeight.Bold,
+                    style = MaterialTheme.typography.titleSmall,
+                    color = if (enabled) Color.Unspecified else Color.Gray
+                )
+                Spacer(modifier = Modifier.height(4.dp))
+                Text(
+                    text = subtitle,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = Color.Gray
                 )
             }
-        }
 
-        Spacer(modifier = Modifier.height(16.dp))
-
-        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(16.dp)) {
-            LayerPickerCard(modifier = Modifier.weight(1f), title = stringResource(R.string.layer_background), subtitle = stringResource(R.string.layer_bg_sub), imageUri = bgUri, enabled = !isProcessing && isPhotoModeActive, onClick = { bgLauncher.launch("image/*") })
-            LayerPickerCard(modifier = Modifier.weight(1f), title = stringResource(R.string.layer_foreground), subtitle = stringResource(R.string.layer_fg_sub), imageUri = fgUri, enabled = !isProcessing && isPhotoModeActive, onClick = { fgLauncher.launch("image/*") })
-        }
-
-        Spacer(modifier = Modifier.weight(1f))
-
-        Button(
-            onClick = {
-                scope.launch(Dispatchers.IO) {
-                    try {
-                        val process = Runtime.getRuntime().exec("su")
-                        process.outputStream.use { os ->
-                            os.write("pkill -f com.android.systemui\n".toByteArray())
-                            os.flush()
-                        }
-                        process.waitFor()
-                    } catch (e: Exception) { e.printStackTrace() }
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(80.dp)
+                    .clip(RoundedCornerShape(12.dp))
+                    .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)),
+                contentAlignment = Alignment.Center
+            ) {
+                if (imageUri != null) {
+                    Text(
+                        text = "Image Selected",
+                        style = MaterialTheme.typography.labelMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                } else {
+                    Text(
+                        text = "Empty",
+                        style = MaterialTheme.typography.labelMedium,
+                        color = Color.Gray
+                    )
                 }
-            },
-            modifier = Modifier.fillMaxWidth().height(58.dp),
-            shape = RoundedCornerShape(28.dp),
-            enabled = isPhotoModeActive
-        ) {
-            Icon(Icons.Default.CheckCircle, contentDescription = null)
-            Spacer(modifier = Modifier.width(8.dp))
-            Text(stringResource(R.string.btn_apply), fontWeight = FontWeight.Bold)
+            }
         }
-        Spacer(modifier = Modifier.height(12.dp))
     }
 }

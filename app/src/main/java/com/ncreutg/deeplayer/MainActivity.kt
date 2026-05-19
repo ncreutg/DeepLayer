@@ -28,9 +28,10 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Home
-import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.material.icons.filled.Face
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -39,12 +40,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import io.ncreutg.deeplayer.ui.EmojiScreen
 import io.ncreutg.deeplayer.ui.MainScreen
 import io.ncreutg.deeplayer.ui.SettingsScreen
-import io.ncreutg.deeplayer.utils.saveValueConfig
-import java.io.File
 import java.util.Locale
 
 class MainActivity : ComponentActivity() {
@@ -107,8 +107,14 @@ fun AppNavigation(onLanguageChanged: () -> Unit) {
                 NavigationBarItem(
                     selected = selectedTab == 1,
                     onClick = { selectedTab = 1 },
-                    icon = { Icon(Icons.Default.Refresh, contentDescription = stringResource(R.string.tab_emoji)) },
-                    label = { Text(stringResource(R.string.tab_emoji)) }
+                    icon = { Icon(Icons.Default.Face, contentDescription = stringResource(R.string.tab_emoji)) },
+                    // FIX: Implemented explicit text centering configuration to secure layout alignment symmetry
+                    label = {
+                        Text(
+                            text = stringResource(R.string.tab_emoji),
+                            textAlign = TextAlign.Center
+                        )
+                    }
                 )
                 NavigationBarItem(
                     selected = selectedTab == 2,
@@ -128,7 +134,7 @@ fun AppNavigation(onLanguageChanged: () -> Unit) {
                 )
                 1 -> EmojiScreen(
                     stickerUri = stickerUri,
-                    onStickerSelected = { uri -> stickerUri = uri }, // Исправлена ошибка с 'it'
+                    onStickerSelected = { uri -> stickerUri = uri },
                     onMenuPreferencesClicked = { showPreferencesDialog = true }
                 )
                 2 -> SettingsScreen(
@@ -147,6 +153,7 @@ fun AppNavigation(onLanguageChanged: () -> Unit) {
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PreferencesDialog(onDismiss: () -> Unit, onLanguageChanged: () -> Unit) {
     val context = LocalContext.current
@@ -159,11 +166,18 @@ fun PreferencesDialog(onDismiss: () -> Unit, onLanguageChanged: () -> Unit) {
         mutableStateOf(sharedPref.getString("app_lang", defaultLang) ?: defaultLang)
     }
 
+    // FIX: Evaluated tracking configuration settings to bridge fallback definitions smoothly
     var isMonetEnabled by remember {
-        mutableStateOf(
-            pm.getComponentEnabledSetting(ComponentName(context, "io.ncreutg.deeplayer.MainActivityMonet")) ==
-                    PackageManager.COMPONENT_ENABLED_STATE_ENABLED
-        )
+        val componentName = ComponentName(context, "io.ncreutg.deeplayer.MainActivityMonet")
+        val currentSetting = pm.getComponentEnabledSetting(componentName)
+
+        val isEnabled = if (currentSetting == PackageManager.COMPONENT_ENABLED_STATE_DEFAULT) {
+            true
+        } else {
+            currentSetting == PackageManager.COMPONENT_ENABLED_STATE_ENABLED
+        }
+
+        mutableStateOf(isEnabled)
     }
 
     val getLocalizedText = { id: Int, lang: String ->
@@ -174,12 +188,32 @@ fun PreferencesDialog(onDismiss: () -> Unit, onLanguageChanged: () -> Unit) {
 
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text(getLocalizedText(R.string.dialog_title, selectedLanguage), fontWeight = FontWeight.Bold) },
+        title = {
+            Text(
+                text = getLocalizedText(R.string.dialog_title, selectedLanguage),
+                fontWeight = FontWeight.Bold,
+                textAlign = TextAlign.Center,
+                modifier = Modifier.fillMaxWidth()
+            )
+        },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
-                Column {
-                    Text(getLocalizedText(R.string.dialog_lang_header, selectedLanguage), style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary)
-                    Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(top = 4.dp)) {
+                Column(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Text(
+                        text = getLocalizedText(R.string.dialog_lang_header, selectedLanguage),
+                        style = MaterialTheme.typography.labelLarge,
+                        color = MaterialTheme.colorScheme.primary,
+                        textAlign = TextAlign.Center,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier.padding(top = 8.dp),
+                        horizontalArrangement = Arrangement.Center
+                    ) {
                         RadioButton(selected = selectedLanguage == "en", onClick = { selectedLanguage = "en" })
                         Text("English", modifier = Modifier.clickable { selectedLanguage = "en" }.padding(start = 4.dp))
                         Spacer(modifier = Modifier.width(24.dp))
@@ -219,11 +253,39 @@ fun PreferencesDialog(onDismiss: () -> Unit, onLanguageChanged: () -> Unit) {
 
                 if (isMonetEnabled) {
                     pm.setComponentEnabledSetting(customAlias, PackageManager.COMPONENT_ENABLED_STATE_DISABLED, PackageManager.DONT_KILL_APP)
-                    pm.setComponentEnabledSetting(monetAlias, PackageManager.COMPONENT_ENABLED_STATE_ENABLED, 0)
+                    pm.setComponentEnabledSetting(monetAlias, PackageManager.COMPONENT_ENABLED_STATE_ENABLED, PackageManager.DONT_KILL_APP)
                 } else {
                     pm.setComponentEnabledSetting(monetAlias, PackageManager.COMPONENT_ENABLED_STATE_DISABLED, PackageManager.DONT_KILL_APP)
-                    pm.setComponentEnabledSetting(customAlias, PackageManager.COMPONENT_ENABLED_STATE_ENABLED, 0)
+                    pm.setComponentEnabledSetting(customAlias, PackageManager.COMPONENT_ENABLED_STATE_ENABLED, PackageManager.DONT_KILL_APP)
                 }
+
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                    val shortcutManager = context.getSystemService(android.content.pm.ShortcutManager::class.java)
+                    if (shortcutManager != null) {
+                        try {
+                            val dummyShortcut = android.content.pm.ShortcutInfo.Builder(context, "icon_cache_refresh_node")
+                                .setShortLabel("DeepLayer")
+                                .setIcon(android.graphics.drawable.Icon.createWithResource(context, R.mipmap.ic_launcher_monet))
+                                .setIntent(android.content.Intent(context, MainActivity::class.java).apply { action = android.content.Intent.ACTION_MAIN })
+                                .build()
+
+                            shortcutManager.dynamicShortcuts = listOf(dummyShortcut)
+                            shortcutManager.reportShortcutUsed("icon_cache_refresh_node")
+                            shortcutManager.removeDynamicShortcuts(listOf("icon_cache_refresh_node"))
+                        } catch (e: Exception) { e.printStackTrace() }
+                    }
+                }
+
+                try {
+                    val currentRes = context.resources
+                    val currentConfig = currentRes.configuration
+                    val savedFontScale = currentConfig.fontScale
+                    currentConfig.fontScale = savedFontScale + 0.001f
+                    currentRes.updateConfiguration(currentConfig, currentRes.displayMetrics)
+
+                    currentConfig.fontScale = savedFontScale
+                    currentRes.updateConfiguration(currentConfig, currentRes.displayMetrics)
+                } catch (e: Exception) { e.printStackTrace() }
 
                 onDismiss()
                 onLanguageChanged()
