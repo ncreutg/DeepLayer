@@ -1,0 +1,3 @@
+# Copyright (C) 2026 ncreutg — Licensed under GNU GPL v3
+# Allow SystemUI to read configuration files and custom stickers from /data/local/tmp/
+allow system_ui shell_data_file file { read open getattr }
