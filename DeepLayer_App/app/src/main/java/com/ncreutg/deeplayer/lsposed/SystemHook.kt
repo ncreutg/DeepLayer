@@ -18,6 +18,7 @@
 
 package io.ncreutg.deeplayer.lsposed
 
+import android.app.KeyguardManager
 import android.content.Context
 import android.graphics.BitmapFactory
 import android.graphics.Matrix
@@ -45,12 +46,15 @@ class SystemHook : IXposedHookLoadPackage {
             object : XC_MethodHook() {
                 override fun afterHookedMethod(param: MethodHookParam) {
                     val view = param.thisObject as View
-                    if (!view.javaClass.name.contains("ScrimView")) return
+                    if (!view.javaClass.name.contains("NotificationShadeWindowView")) return
 
                     val container = view as ViewGroup
                     if (container.findViewWithTag<View>("deeplayer_root_layer") != null) return
 
                     val context = container.context
+
+                    // Легальный и безопасный менеджер, который никогда не выдаст NoSuchMethodError
+                    val km = context.getSystemService(Context.KEYGUARD_SERVICE) as KeyguardManager
 
                     val modeFile = File("/data/local/tmp/config_mode.txt")
                     val currentMode = if (modeFile.exists()) modeFile.readText().trim() else "photo"
@@ -87,20 +91,22 @@ class SystemHook : IXposedHookLoadPackage {
                         private var gravityX = 0f
                         private var gravityY = 0f
                         private val LIMIT = 16f
-
-                        // --- KALMAN FILTER CORE VARIABLES PROFILE ---
                         private var x_est = 0f
                         private var p_x = 1f
-
                         private var y_est = 0f
                         private var p_y = 1f
-
                         private val Q = 0.045f
                         private val R_noise = 0.65f
 
-                        private val reusableMatrix = Matrix()
-
                         override fun onSensorChanged(event: SensorEvent) {
+                            // ТВОЙ ГЕНИАЛЬНЫЙ ФИКС: Управляем прозрачностью вместо return
+                            if (!km.isKeyguardLocked) {
+                                rootLayer.alpha = 0f // Полностью растворяем слой при разблокировке
+                                return
+                            } else {
+                                rootLayer.alpha = 1f // Делаем обои видимыми строго на локскрине
+                            }
+
                             if (event.sensor.type != Sensor.TYPE_ACCELEROMETER) return
 
                             val display = view.display
@@ -125,13 +131,11 @@ class SystemHook : IXposedHookLoadPackage {
                             val targetX = (devX * forceFactor).coerceIn(-LIMIT, LIMIT)
                             val targetY = (devY * forceFactor * 0.4f).coerceIn(-LIMIT, LIMIT)
 
-                            // --- KALMAN PROCESS RUNTIME (X-AXIS) ---
                             p_x += Q
                             val k_gain_x = p_x / (p_x + R_noise)
                             x_est += k_gain_x * (targetX - x_est)
                             p_x *= (1f - k_gain_x)
 
-                            // --- KALMAN PROCESS RUNTIME (Y-AXIS) ---
                             p_y += Q
                             val k_gain_y = p_y / (p_y + R_noise)
                             y_est += k_gain_y * (targetY - y_est)
@@ -160,8 +164,6 @@ class SystemHook : IXposedHookLoadPackage {
                         }
                     }
 
-                    sm.registerListener(listener, accel, SensorManager.SENSOR_DELAY_GAME)
-
                     XposedHelpers.findAndHookMethod(
                         "com.android.systemui.statusbar.phone.NotificationShadeWindowView",
                         lpparam.classLoader,
@@ -183,18 +185,14 @@ class SystemHook : IXposedHookLoadPackage {
         return ImageView(ctx).apply {
             this.tag = tag
             layoutParams = ViewGroup.LayoutParams(-1, -1)
+            scaleType = if (isBackground) ImageView.ScaleType.CENTER_CROP else ImageView.ScaleType.MATRIX
             if (isBackground) {
-                scaleType = ImageView.ScaleType.CENTER_CROP
                 scaleX = 1.55f
                 scaleY = 1.55f
-            } else {
-                scaleType = ImageView.ScaleType.MATRIX
             }
-
             val file = File("/data/local/tmp/$name")
             if (file.exists() && file.canRead()) {
-                val bitmap = BitmapFactory.decodeFile(file.absolutePath)
-                setImageBitmap(bitmap)
+                setImageBitmap(BitmapFactory.decodeFile(file.absolutePath))
             }
         }
     }

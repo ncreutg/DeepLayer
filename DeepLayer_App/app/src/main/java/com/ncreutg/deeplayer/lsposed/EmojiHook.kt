@@ -41,28 +41,23 @@ class EmojiHook : IXposedHookLoadPackage {
     override fun handleLoadPackage(lpparam: LoadPackageParam) {
         if (lpparam.packageName != "com.android.systemui") return
 
-        // FIX: Redirect target class search directly onto ScrimView layer to prevent overlay glitches
         val targetClass: Class<*> = try {
-            XposedHelpers.findClass("com.android.systemui.scrim.ScrimView", lpparam.classLoader)
+            XposedHelpers.findClass("com.android.systemui.shade.NotificationShadeWindowView", lpparam.classLoader)
         } catch (e: XposedHelpers.ClassNotFoundError) {
             try {
-                XposedHelpers.findClass("com.android.systemui.statusbar.phone.ScrimView", lpparam.classLoader)
+                XposedHelpers.findClass("com.android.systemui.statusbar.phone.NotificationShadeWindowView", lpparam.classLoader)
             } catch (ex: XposedHelpers.ClassNotFoundError) {
-                XposedBridge.log("DEEPLAYER ERROR: Failed to locate ScrimView class architecture")
+                XposedBridge.log("DEEPLAYER ERROR: Не удалось найти класс NotificationShadeWindowView")
                 return
             }
         }
 
-        // FIX: Hooking onAttachedToWindow on ScrimView level ensuring background-only pipeline rendering
         XposedHelpers.findAndHookMethod(
             targetClass,
             "onAttachedToWindow",
             object : XC_MethodHook() {
                 override fun afterHookedMethod(param: MethodHookParam) {
-                    val scrimInstance = param.thisObject as View
-
-                    // Exclude specific dynamic notification shade subview components if necessary
-                    val container = scrimInstance.parent as? ViewGroup ?: return
+                    val container = param.thisObject as ViewGroup
                     if (container.findViewWithTag<View>("deeplayer_root_layer") != null) return
 
                     val modeFile = File("/data/local/tmp/config_mode.txt")
@@ -78,6 +73,7 @@ class EmojiHook : IXposedHookLoadPackage {
                         tag = "deeplayer_root_layer"
                         layoutParams = ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT)
                         translationZ = -50f
+                        visibility = View.GONE
                         try {
                             setBackgroundColor(Color.parseColor(bgColorString))
                         } catch (e: Exception) {
@@ -98,7 +94,7 @@ class EmojiHook : IXposedHookLoadPackage {
                         if (useStickerImage) {
                             val totalStickersCount = rawConfigString.toIntOrNull() ?: 0
                             for (idx in 0 until totalStickersCount) {
-                                val targetFile = File("/data/local/tmp/sticker_$idx.png")
+                                val targetFile = File("/data/local/tmp/sticker_" + idx + ".png")
                                 if (targetFile.exists() && targetFile.canRead()) {
                                     BitmapFactory.decodeFile(targetFile.absolutePath)?.let {
                                         stickerBitmapsList.add(it)
@@ -122,6 +118,56 @@ class EmojiHook : IXposedHookLoadPackage {
                             rootLayer.addView(emojiView)
                         }
                     }.start()
+
+                    var stateController: Any? = null
+                    var stateListenerProxy: Any? = null
+
+                    try {
+                        val dependencyClass = XposedHelpers.findClass("com.android.systemui.Dependency", lpparam.classLoader)
+                        val statusBarStateControllerClass = XposedHelpers.findClass("com.android.systemui.plugins.statusbar.StatusBarStateController", lpparam.classLoader)
+                        stateController = XposedHelpers.callStaticMethod(dependencyClass, "get", statusBarStateControllerClass)
+
+                        val stateListenerInterface = Class.forName("com.android.systemui.plugins.statusbar.StatusBarStateController\$StateListener", false, lpparam.classLoader)
+
+                        stateListenerProxy = java.lang.reflect.Proxy.newProxyInstance(
+                            lpparam.classLoader,
+                            arrayOf(stateListenerInterface),
+                            object : java.lang.reflect.InvocationHandler {
+                                override fun invoke(proxy: Any, method: java.lang.reflect.Method, args: Array<out Any>?): Any? {
+                                    if (method.name == "onStateChanged") {
+                                        val newState = args?.get(0) as Int
+                                        if (newState == 1 || newState == 2) {
+                                            rootLayer.visibility = View.VISIBLE
+                                        } else {
+                                            rootLayer.visibility = View.GONE
+                                        }
+                                    }
+                                    return null
+                                }
+                            }
+                        )
+
+                        XposedHelpers.callMethod(stateController, "addCallback", stateListenerProxy)
+                    } catch (e: Throwable) {
+                        XposedBridge.log("Deeplayer Emoji Error: " + e.message)
+                        rootLayer.visibility = View.VISIBLE
+                    }
+
+                    XposedHelpers.findAndHookMethod(
+                        targetClass,
+                        "onDetachedFromWindow",
+                        object : XC_MethodHook() {
+                            override fun afterHookedMethod(param: MethodHookParam) {
+                                if (param.thisObject === container) {
+                                    if (stateController != null && stateListenerProxy != null) {
+                                        try {
+                                            XposedHelpers.callMethod(stateController, "removeCallback", stateListenerProxy)
+                                        } catch (e: Throwable) {}
+                                    }
+                                }
+                            }
+                        }
+                    )
                 }
             }
         )
