@@ -1,0 +1,6 @@
+id=deeplayer-sepolicy-fix
+name=DeepLayer — SystemUI Sepolicy Fix
+version=v1.0.0
+versionCode=100
+author=ncreutg
+description=Injects custom SELinux policies to allow SystemUI process safely read cached assets from /data/local/tmp/ context window planes.
