@@ -39,7 +39,6 @@
     <string name="slider_offset_x">Foreground Horizontal Offset (X)</string>
     <string name="unit_px">px</string>
     <string name="btn_zygote">Soft Reboot (Zygote)</string>
-    <string name="dialog_title">Preferences</string>
     <string name="dialog_lang_header">App Language</string>
     <string name="dialog_theme_header">Icon Theme Palette</string>
     <string name="theme_custom">Custom Palette</string>
@@ -54,4 +53,20 @@
     <string name="layer_sticker">Sticker Asset</string>
     <string name="emoji_use_sticker">Use Graphic Sticker instead of Text</string>
     <string name="xposed_mod_description">Parallax effect and more</string>
+    <string name="clear_stickers">Clear stickers</string>
+    <string name="enable_Emoji_Stiker">Enable Emoji &amp; Sticker</string>
+    <string name="enable_Parallax">Enable Parallax</string>
+    <string name="root_title">Root Access Required</string>
+    <string name="root_description">DeepLayer requires superuser privileges to write configuration parameters to /data/local/tmp/ and restart SystemUI layers safely.</string>
+    <string name="btn_root_retry">Grant &amp; Retry</string>
+    <string name="layout_style">Layout style</string>
+    <string name="settings_parallax">Settings Parallax</string>
+    <string name="mosaic">Mosaic</string>
+    <string name="dense">Dense grid</string>
+    <string name="matrix">Depth</string>
+    <string name="chaos">Chaos</string>
+    <string name="grid">Grid</string>
+    <string name="spiral">Spiral</string>
+    <string name="rhombus">Rhombus</string>
+    <string name="wave">Wave</string>
 </resources>

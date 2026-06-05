@@ -39,10 +39,9 @@
     <string name="slider_offset_x">Положение по горизонтали (X)</string>
     <string name="unit_px">px</string>
     <string name="btn_zygote">Перезапустить Zygote</string>
-    <string name="dialog_title">Преференции</string>
     <string name="dialog_lang_header">Язык приложения</string>
     <string name="dialog_theme_header">Палитра иконки</string>
-    <string name="theme_custom">Наш стиль</string>
+    <string name="theme_custom">Стиль приложения</string>
     <string name="theme_monet">Monet (Динамическая)</string>
     <string name="dialog_btn_save">Сохранить</string>
     <string name="dialog_btn_cancel">Отмена</string>
@@ -54,5 +53,20 @@
     <string name="layer_sticker">Файл стикера</string>
     <string name="emoji_use_sticker">Использовать графический стикер вместо текста</string>
     <string name="xposed_mod_description">Параллакс эффект и не только</string>
-
+    <string name="clear_stickers">Очистить стикеры</string>
+    <string name="enable_Emoji_Stiker">Включить Эмодзи и Стикеры</string>
+    <string name="enable_Parallax">Включить Параллакс</string>
+    <string name="root_title">Требуются Root-права</string>
+    <string name="root_description">Приложению DeepLayer необходимы права суперпользователя для записи файлов конфигурации в /data/local/tmp/ и безопасного перезапуска системного интерфейса.</string>
+    <string name="btn_root_retry">Предоставить и повторить</string>
+    <string name="layout_style">Стиль расположения:</string>
+    <string name="settings_parallax">Настройки Параллакса</string>
+    <string name="mosaic">Мозаика</string>
+    <string name="dense">Плотная сетка</string>
+    <string name="matrix">Глубина</string>
+    <string name="chaos">Хаос</string>
+    <string name="grid">Сетка</string>
+    <string name="spiral">Спираль</string>
+    <string name="rhombus">Ромб</string>
+    <string name="wave">Волна</string>
 </resources>

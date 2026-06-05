@@ -32,7 +32,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CheckCircle
-import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -59,8 +58,7 @@ fun MainScreen(
     bgUri: Uri?,
     fgUri: Uri?,
     onBgSelected: (Uri) -> Unit,
-    onFgSelected: (Uri) -> Unit,
-    onMenuPreferencesClicked: () -> Unit
+    onFgSelected: (Uri) -> Unit
 ) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
@@ -141,22 +139,6 @@ fun MainScreen(
         ) {
             LargeTopAppBar(
                 title = { Text(stringResource(R.string.app_name), fontWeight = FontWeight.Black, color = MaterialTheme.colorScheme.primary) },
-                actions = {
-                    Box {
-                        IconButton(onClick = { menuExpanded = true }) {
-                            Icon(Icons.Default.MoreVert, contentDescription = "Menu Options")
-                        }
-                        DropdownMenu(expanded = menuExpanded, onDismissRequest = { menuExpanded = false }) {
-                            DropdownMenuItem(
-                                text = { Text(stringResource(R.string.dialog_title)) },
-                                onClick = {
-                                    menuExpanded = false
-                                    onMenuPreferencesClicked()
-                                }
-                            )
-                        }
-                    }
-                },
                 colors = TopAppBarDefaults.largeTopAppBarColors(containerColor = Color.Transparent)
             )
 
@@ -200,7 +182,7 @@ fun MainScreen(
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Text("Enable 3D Photo Parallax", fontWeight = FontWeight.Bold, style = MaterialTheme.typography.bodyMedium)
+                    Text(text = stringResource(R.string.enable_Parallax), fontWeight = FontWeight.Bold, style = MaterialTheme.typography.bodyMedium)
                     Switch(
                         checked = isPhotoModeActive,
                         onCheckedChange = { active ->
@@ -226,7 +208,7 @@ fun MainScreen(
                     verticalArrangement = Arrangement.spacedBy(16.dp) // Чёткий шаг между блоками
                 ) {
                     Text(
-                        text = "Настройки 3D Движка",
+                        text = stringResource(R.string.settings_parallax),
                         style = MaterialTheme.typography.labelMedium,
                         fontWeight = FontWeight.Bold,
                         color = if (isPhotoModeActive) MaterialTheme.colorScheme.primary else Color.Gray,

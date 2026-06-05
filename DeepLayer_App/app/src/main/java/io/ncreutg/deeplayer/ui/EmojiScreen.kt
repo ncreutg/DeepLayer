@@ -24,6 +24,7 @@ import android.net.Uri
 import android.os.Build
 import android.text.Editable
 import android.text.SpannableString
+import androidx.compose.material.icons.filled.Delete
 import android.text.Spanned
 import android.text.TextWatcher
 import android.text.style.ImageSpan
@@ -41,7 +42,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CheckCircle
-import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -70,8 +70,7 @@ import java.io.File
 @Composable
 fun EmojiScreen(
     stickerUri: Uri?,
-    onStickerSelected: (Uri) -> Unit,
-    onMenuPreferencesClicked: () -> Unit
+    onStickerSelected: (Uri) -> Unit
 ) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
@@ -166,20 +165,7 @@ fun EmojiScreen(
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             LargeTopAppBar(
-                title = { Text(stringResource(R.string.tab_emoji), fontWeight = FontWeight.Black, color = MaterialTheme.colorScheme.primary) },
-                actions = {
-                    Box {
-                        IconButton(onClick = { menuExpanded = true }) {
-                            Icon(Icons.Default.MoreVert, contentDescription = "Menu")
-                        }
-                        DropdownMenu(expanded = menuExpanded, onDismissRequest = { menuExpanded = false }) {
-                            DropdownMenuItem(
-                                text = { Text(stringResource(R.string.dialog_title)) },
-                                onClick = { menuExpanded = false; onMenuPreferencesClicked() }
-                            )
-                        }
-                    }
-                },
+                title = { Text(stringResource(R.string.app_name), fontWeight = FontWeight.Black, color = MaterialTheme.colorScheme.primary) },
                 colors = TopAppBarDefaults.largeTopAppBarColors(containerColor = Color.Transparent)
             )
 
@@ -194,7 +180,7 @@ fun EmojiScreen(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Column(modifier = Modifier.weight(1f)) {
-                        Text("Enable Emoji & Sticker Mode", fontWeight = FontWeight.Bold, style = MaterialTheme.typography.bodyMedium)
+                        Text(text = stringResource(R.string.enable_Emoji_Stiker), fontWeight = FontWeight.Bold, style = MaterialTheme.typography.bodyMedium)
                     }
                     Row(
                         horizontalArrangement = Arrangement.spacedBy(12.dp),
@@ -238,18 +224,18 @@ fun EmojiScreen(
 
                     if (isEmojiModeActive) {
                         val layoutsList = listOf(
-                            "dense_grid" to "Плотная",
-                            "mosaic" to "Мозаика (iOS)",
-                            "matrix" to "3D Глубина",
-                            "chaos" to "Хаос",
-                            "grid" to "Стандарт",
-                            "spiral" to "Спираль",
-                            "diamond" to "Ромб",
-                            "wave" to "Волна"
+                            "dense_grid" to stringResource(R.string.dense),
+                            "mosaic" to stringResource(R.string.mosaic),
+                            "matrix" to stringResource(R.string.matrix),
+                            "chaos" to stringResource(R.string.chaos),
+                            "grid" to stringResource(R.string.grid),
+                            "spiral" to stringResource(R.string.spiral),
+                            "rhombus" to stringResource(R.string.rhombus),
+                            "wave" to stringResource(R.string.wave)
                         )
 
                         Text(
-                            text = "Стиль расположения:",
+                            text = stringResource(R.string.layout_style),
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                             modifier = Modifier.padding(bottom = 6.dp)
@@ -281,6 +267,40 @@ fun EmojiScreen(
                     }
 
                     if (isEmojiModeActive) {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(bottom = 8.dp),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                text = stringResource(R.string.emoji_input_label),
+                                style = MaterialTheme.typography.labelMedium,
+                                fontWeight = FontWeight.Bold,
+                                color = if (isEmojiModeActive) MaterialTheme.colorScheme.primary else Color.Gray
+                            )
+
+                            if (isEmojiModeActive && stickerCountState > 0) {
+                                TextButton(
+                                    onClick = {
+                                        scope.launch(Dispatchers.IO) {
+                                            clearSavedStickers(context)
+                                            // Switch back to Main dispatcher to securely mutate state variables on the UI thread
+                                            withContext(Dispatchers.Main) {
+                                                stickerCountState = 0
+                                                emojiSet = ""
+                                            }
+                                        }
+                                    },
+                                    colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.error)
+                                ) {
+                                    Icon(Icons.Default.Delete, contentDescription = "Clear all cached stickers", modifier = Modifier.size(18.dp))
+                                    Spacer(modifier = Modifier.width(4.dp))
+                                    Text(text = stringResource(R.string.clear_stickers), fontWeight = FontWeight.SemiBold)
+                                }
+                            }
+                        }
                         AndroidView(
                             modifier = Modifier
                                 .fillMaxWidth()
@@ -297,8 +317,7 @@ fun EmojiScreen(
                                     setTextColor(android.graphics.Color.WHITE)
                                     setHintTextColor(android.graphics.Color.GRAY)
 
-                                    // Загружаем начальный текст без триггера слушателей
-                                    setText(emojiSet)
+                                    setText(if (emojiSet.isEmpty()) " " else emojiSet)
 
                                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
                                         val mimeTypes = arrayOf("image/*")
@@ -358,7 +377,14 @@ fun EmojiScreen(
 
                                             val txt = s?.toString() ?: ""
 
-                                            // ГЕНИАЛЬНЫЙ И БЕЗОПАСНЫЙ ПОДСЧЕТ ЛЮБЫХ СЛОЖНЫХ ЭМОДЗИ
+                                            if (txt.isEmpty()) {
+                                                selfChange = true
+                                                setText(" ")
+                                                setSelection(1)
+                                                selfChange = false
+                                                return
+                                            }
+
                                             val it = java.text.BreakIterator.getCharacterInstance()
                                             it.setText(txt)
                                             var emojiCount = 0
@@ -384,7 +410,8 @@ fun EmojiScreen(
                                                 if (txt.toIntOrNull() == null) {
                                                     stickerCountState = 0
                                                     scope.launch(Dispatchers.IO) {
-                                                        saveValueConfig("config_emoji_set.txt", txt, context)
+                                                        val cleanText = txt.trim()
+                                                        saveValueConfig("config_emoji_set.txt", cleanText, context)
                                                         saveValueConfig("config_emoji_use_sticker.txt", "false", context)
                                                     }
                                                 }
@@ -479,4 +506,22 @@ fun ColorSlider(label: String, value: Float, enabled: Boolean, onValueChange: (F
 suspend fun saveColorConfig(color: Color, context: Context) {
     val hexString = String.format("#%08X", color.toArgb())
     saveValueConfig("config_emoji_bg.txt", hexString, context)
+}
+
+private fun clearSavedStickers(context: Context) {
+    try {
+        val process = Runtime.getRuntime().exec("su")
+        process.outputStream.use { os ->
+            // Delete all sticker images using wildcard matching
+            os.write("rm -f /data/local/tmp/sticker_*\n".toByteArray())
+            // Reset config parameters to safe baseline states
+            os.write("echo '0' > /data/local/tmp/config_emoji_set.txt\n".toByteArray())
+            os.write("echo 'false' > /data/local/tmp/config_emoji_use_sticker.txt\n".toByteArray())
+            os.write("chmod 666 /data/local/tmp/config_*\n".toByteArray())
+            os.flush()
+        }
+        process.waitFor()
+    } catch (e: Exception) {
+        e.printStackTrace()
+    }
 }

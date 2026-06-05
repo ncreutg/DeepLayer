@@ -279,7 +279,7 @@ class EmojiPatternView(
             "spiral" -> calculateSpiralLotus(w, h, isStickerMode)
             "matrix" -> calculateMatrixDepth(w, h, isStickerMode)
             "chaos" -> calculateChaosScatter(w, h, isStickerMode)
-            "diamond" -> calculateDiamondPattern(w, h, isStickerMode)
+            "rhombus" -> calculateRhombusPattern(w, h, isStickerMode)
             "wave" -> calculateWavePattern(w, h, isStickerMode)
             else -> calculateDenseFullGrid(w, h, isStickerMode)
         }
@@ -408,13 +408,13 @@ class EmojiPatternView(
         }
     }
 
-    private fun calculateDiamondPattern(w: Int, h: Int, isStickerMode: Boolean) {
+    private fun calculateRhombusPattern(w: Int, h: Int, isStickerMode: Boolean) {
         val centerX = w / 2f
         val centerY = h / 2f
         val stepX = w * 0.22f
         val stepY = h * 0.12f
 
-        val diamondNodes = listOf(
+        val rhombusNodes = listOf(
             Pair(0f, 0f),
             Pair(0f, -stepY), Pair(0f, stepY),
             Pair(-stepX, 0f), Pair(stepX, 0f),
@@ -424,7 +424,7 @@ class EmojiPatternView(
             Pair(-2 * stepX, 0f), Pair(2 * stepX, 0f)
         )
 
-        diamondNodes.forEachIndexed { index, node ->
+        rhombusNodes.forEachIndexed { index, node ->
             val finalX = centerX + node.first
             val finalY = centerY + node.second
             if (finalX > 0 && finalX < w && finalY > 0 && finalY < h) {
@@ -480,6 +480,9 @@ class EmojiPatternView(
         val baseSize = (54f * density).toInt()
         val fontMetrics = paint.fontMetrics
         val textOffset = (fontMetrics.descent + fontMetrics.ascent) / 2f
+
+        paint.isAntiAlias = true
+        paint.isFilterBitmap = true
 
         renderElements.forEach { item ->
             val dynamicSize = (baseSize * item.scaleFactor).toInt()
