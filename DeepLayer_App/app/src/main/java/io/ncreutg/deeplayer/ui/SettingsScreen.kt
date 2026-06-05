@@ -231,7 +231,7 @@ fun SettingsScreen(onLanguageChanged: () -> Unit) {
                         modifier = Modifier
                             .clickable {
                                 try {
-                                    val browserIntent = Intent(Intent.ACTION_VIEW, Uri.parse("https://github.com"))
+                                    val browserIntent = Intent(Intent.ACTION_VIEW, Uri.parse("https://github.com/ncreutg/DeepLayer"))
                                     context.startActivity(browserIntent)
                                 } catch (e: Exception) { e.printStackTrace() }
                             }
