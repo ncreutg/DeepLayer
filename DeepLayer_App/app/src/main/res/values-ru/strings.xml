@@ -69,4 +69,6 @@
     <string name="spiral">Спираль</string>
     <string name="rhombus">Ромб</string>
     <string name="wave">Волна</string>
+    <string name="empty">Пусто</string>
+    <string name="img_selected">Изображение выбрано</string>
 </resources>

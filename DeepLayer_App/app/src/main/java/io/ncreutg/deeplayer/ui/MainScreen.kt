@@ -55,10 +55,10 @@ import java.io.File
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MainScreen(
-    bgUri: Uri?,
-    fgUri: Uri?,
-    onBgSelected: (Uri) -> Unit,
-    onFgSelected: (Uri) -> Unit
+    bgUri: android.net.Uri?,
+    fgUri: android.net.Uri?,
+    onBgSelected: (android.net.Uri) -> Unit,
+    onFgSelected: (android.net.Uri) -> Unit
 ) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
@@ -187,13 +187,21 @@ fun MainScreen(
                         checked = isPhotoModeActive,
                         onCheckedChange = { active ->
                             isPhotoModeActive = active
-                            val targetMode = if (active) "photo" else "emoji"
+                            // If disabled, we fall back to 'none' instead of forcing emoji mode
+                            val targetMode = if (active) "photo" else "none"
                             scope.launch(Dispatchers.IO) {
                                 saveValueConfig("config_mode.txt", targetMode, context)
                             }
                         }
                     )
                 }
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+                LayerPickerCard(modifier = Modifier.weight(1f), title = stringResource(R.string.layer_background), subtitle = stringResource(R.string.layer_bg_sub), imageUri = bgUri, enabled = !isProcessing && isPhotoModeActive, onClick = { bgLauncher.launch("image/*") })
+                LayerPickerCard(modifier = Modifier.weight(1f), title = stringResource(R.string.layer_foreground), subtitle = stringResource(R.string.layer_fg_sub), imageUri = fgUri, enabled = !isProcessing && isPhotoModeActive, onClick = { fgLauncher.launch("image/*") })
             }
 
             Spacer(modifier = Modifier.height(16.dp))
@@ -234,7 +242,6 @@ fun MainScreen(
 
                     Divider(color = MaterialTheme.colorScheme.outline.copy(alpha = 0.1f))
 
-                    // 2. БЛОК: Положение по вертикали (Y)
                     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
                             Text(stringResource(R.string.slider_offset_y), style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Bold, color = if (isPhotoModeActive) Color.Unspecified else Color.Gray)
@@ -283,7 +290,6 @@ fun MainScreen(
                         try {
                             val process = Runtime.getRuntime().exec("su")
                             process.outputStream.use { os ->
-                                // Sync baseline file access permissions for photo mode layers
                                 os.write("chmod 666 /data/local/tmp/background.png\n".toByteArray())
                                 os.write("chmod 666 /data/local/tmp/foreground.png\n".toByteArray())
                                 os.write("pkill -f com.android.systemui\n".toByteArray())
@@ -293,7 +299,6 @@ fun MainScreen(
                         } catch (e: Exception) { e.printStackTrace() }
                     }
                 },
-                // FIX: Added navigationBarsPadding to safely push the button above the system gesture bar without crunching it
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(58.dp)
@@ -305,6 +310,7 @@ fun MainScreen(
                 Spacer(modifier = Modifier.width(8.dp))
                 Text(stringResource(R.string.btn_apply), fontWeight = FontWeight.Bold)
             }
+
             Spacer(modifier = Modifier.height(12.dp))
         }
     }
@@ -361,14 +367,14 @@ fun LayerPickerCard(
             ) {
                 if (imageUri != null) {
                     Text(
-                        text = "Image Selected",
+                        text = stringResource(R.string.img_selected),
                         style = MaterialTheme.typography.labelMedium,
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.primary
                     )
                 } else {
                     Text(
-                        text = "Empty",
+                        text = stringResource(R.string.empty),
                         style = MaterialTheme.typography.labelMedium,
                         color = Color.Gray
                     )

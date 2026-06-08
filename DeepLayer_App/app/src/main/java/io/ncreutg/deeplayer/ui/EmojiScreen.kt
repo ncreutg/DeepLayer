@@ -198,8 +198,11 @@ fun EmojiScreen(
                             checked = isEmojiModeActive,
                             onCheckedChange = { active ->
                                 isEmojiModeActive = active
-                                val targetMode = if (active) "emoji" else "photo"
-                                scope.launch(Dispatchers.IO) { saveValueConfig("config_mode.txt", targetMode, context) }
+                                // If disabled, we securely write 'none' to freeze both engines
+                                val targetMode = if (active) "emoji" else "none"
+                                scope.launch(Dispatchers.IO) {
+                                    saveValueConfig("config_mode.txt", targetMode, context)
+                                }
                             }
                         )
                     }

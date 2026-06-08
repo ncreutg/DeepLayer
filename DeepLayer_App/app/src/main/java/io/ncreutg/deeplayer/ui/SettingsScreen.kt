@@ -211,7 +211,7 @@ fun SettingsScreen(onLanguageChanged: () -> Unit) {
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
                     Text(
-                        text = "DeepLayer v1.0.3",
+                        text = "DeepLayer v1.3.1",
                         style = MaterialTheme.typography.labelLarge,
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.onSurfaceVariant

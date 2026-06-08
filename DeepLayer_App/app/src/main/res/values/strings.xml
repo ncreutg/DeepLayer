@@ -69,4 +69,6 @@
     <string name="spiral">Spiral</string>
     <string name="rhombus">Rhombus</string>
     <string name="wave">Wave</string>
+    <string name="empty">Empty</string>
+    <string name="img_selected">Image selected</string>
 </resources>
